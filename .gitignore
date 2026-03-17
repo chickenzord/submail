@@ -1,0 +1,14 @@
+# Agent skills (project-scoped)
+.pi/
+.claude/
+.agents/
+
+# Go
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
