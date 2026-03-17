@@ -6,7 +6,9 @@ Virtual inbox router for AI agents.
 
 ## Overview
 
-Submail connects to one or more real email inboxes via IMAP and re-exposes them as a REST API with per-agent access control. Multiple AI agents sharing a single email address via plus-addressing (e.g. `bot+agent1@example.com`) each get their own API token scoped to their aliased address.
+Submail connects to one or more real email inboxes via IMAP and re-exposes them as a REST API with per-agent access control. Each agent gets their own API token scoped to one or more configured addresses that all deliver into the same monitored inbox.
+
+The addresses can be set up in any way your mail provider supports — plus-addressing (e.g. `bot+agent1@example.com`) is a common and convenient option, but fully separate aliases (e.g. `agent1@example.com`, `agent2@example.com`) pointing to the same inbox work just as well.
 
 ## Usage
 
@@ -45,7 +47,7 @@ Sensitive values can be supplied via environment variable or a file:
 
 ## Mail Routing
 
-Each mail is routed based on a single recipient address — the plus-alias it was delivered to (e.g. `bot+agent1@example.com`). This means:
+Each mail is routed based on a single recipient address — whichever configured address it was delivered to. This means:
 
 - Only the `To:` delivery address is used for routing; `Cc:` and `Bcc:` recipients are not considered.
 - If a mail is addressed to multiple aliases belonging to the same agent, it will only appear once in their inbox (under whichever alias was recorded at ingest time).
