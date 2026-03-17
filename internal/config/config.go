@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -33,12 +34,14 @@ const (
 )
 
 type IMAPConfig struct {
-	Host     string  `yaml:"host"`
-	Port     int     `yaml:"port"`
-	Username string  `yaml:"username"`
-	Password string  `yaml:"password"`
-	Mailbox  string  `yaml:"mailbox"`
-	TLSMode  TLSMode `yaml:"tls_mode"`
+	Host         string        `yaml:"host"`
+	Port         int           `yaml:"port"`
+	Username     string        `yaml:"username"`
+	Password     string        `yaml:"password"`
+	Mailbox      string        `yaml:"mailbox"`
+	TLSMode      TLSMode       `yaml:"tls_mode"`
+	PollInterval time.Duration `yaml:"poll_interval"`
+	MaxMailAge   time.Duration `yaml:"max_mail_age"`
 }
 
 type StorageConfig struct {
@@ -66,6 +69,9 @@ func (c *Config) setDefaults() {
 	}
 	if c.IMAP.TLSMode == "" {
 		c.IMAP.TLSMode = TLSModeImplicit
+	}
+	if c.IMAP.PollInterval <= 0 {
+		c.IMAP.PollInterval = 60 * time.Second
 	}
 }
 

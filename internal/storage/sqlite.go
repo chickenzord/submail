@@ -22,11 +22,25 @@ func NewSQLiteStore(path string) (*SQLiteStore, error) {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
 
-	// SQLite does not support concurrent writes.
+	// A single connection serialises all goroutine access without any locking
+	// overhead. Because only one process ever opens this file, WAL mode and
+	// busy_timeout are not needed.
 	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+	db.SetConnMaxLifetime(0) // keep the connection open for the lifetime of the process
+
+	ctx := context.Background()
+
+	if _, err := db.ExecContext(ctx, `
+		PRAGMA synchronous=NORMAL;
+		PRAGMA foreign_keys=ON;
+	`); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("configure sqlite pragmas: %w", err)
+	}
 
 	s := &SQLiteStore{db: db}
-	if err := s.migrate(context.Background()); err != nil {
+	if err := s.migrate(ctx); err != nil {
 		db.Close()
 		return nil, fmt.Errorf("migrate: %w", err)
 	}

@@ -3,6 +3,10 @@
 .claude/
 .agents/
 
+# Local test / secret configs (never commit)
+config.test.yaml
+*.db
+
 # Go
 /dist/
 *.exe

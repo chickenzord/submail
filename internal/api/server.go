@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/chickenzord/submail/internal/config"
@@ -40,7 +41,12 @@ func (s *Server) Handler() http.Handler {
 	return s.echo
 }
 
-// Start begins listening on addr.
+// Start begins listening on addr. It returns http.ErrServerClosed on graceful shutdown.
 func (s *Server) Start(addr string) error {
 	return s.echo.Start(addr)
+}
+
+// Shutdown gracefully stops the server, waiting up to the deadline in ctx.
+func (s *Server) Shutdown(ctx context.Context) error {
+	return s.echo.Shutdown(ctx)
 }
