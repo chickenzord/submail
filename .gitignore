@@ -16,3 +16,12 @@ config.test.yaml
 *.dylib
 *.test
 *.out
+
+# Binaries
+/bin/
+/submail
+
+# Tests
+coverage.out
+coverage.html
+coverage.txt

@@ -1,6 +1,7 @@
 # submail
 
 [![Tests](https://github.com/chickenzord/submail/actions/workflows/go.yml/badge.svg)](https://github.com/chickenzord/submail/actions/workflows/go.yml)
+[![codecov](https://codecov.io/gh/chickenzord/submail/branch/main/graph/badge.svg)](https://codecov.io/gh/chickenzord/submail)
 
 Virtual inbox router for AI agents.
 
