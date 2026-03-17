@@ -1,0 +1,10 @@
+imap:
+  host: imap.test.example.com
+  username: test@example.com
+  password: testpassword
+
+agents:
+  - id: testagent
+    token: "test-token-123"
+    addresses:
+      - "test+testagent@example.com"

@@ -1,0 +1,17 @@
+server:
+  addr: ":9090"
+
+imap:
+  host: imap.test.example.com
+  port: 993
+  username: test@example.com
+  password: testpassword
+
+storage:
+  path: /tmp/submail-test.db
+
+agents:
+  - id: testagent
+    token: "test-token-123"
+    addresses:
+      - "test+testagent@example.com"

@@ -1,0 +1,21 @@
+server:
+  addr: ":8080"
+
+imap:
+  host: imap.example.com
+  port: 993
+  username: bot@example.com
+  password: secret              # or use env: SUBMAIL_IMAP_PASSWORD[__FILE]
+
+storage:
+  path: ./submail.db
+
+agents:
+  - id: agent1
+    token: "agent1-secret-token"   # or use env: SUBMAIL_AGENT_AGENT1_TOKEN[__FILE]
+    addresses:
+      - "bot+agent1@example.com"
+  - id: agent2
+    token: "agent2-secret-token"   # or use env: SUBMAIL_AGENT_AGENT2_TOKEN[__FILE]
+    addresses:
+      - "bot+agent2@example.com"
