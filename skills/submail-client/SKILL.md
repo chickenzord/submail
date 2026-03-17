@@ -10,7 +10,7 @@ metadata:
         "emoji": "📬",
         "homepage": "https://github.com/chickenzord/submail",
         "keywords": ["email", "inbox", "imap", "submail", "cli", "agent", "mail"],
-        "requires": { "bins": ["submail"] },
+        "requires": { "bins": ["submail", "jq"] },
         "install":
           [
             {
@@ -26,6 +26,13 @@ metadata:
               "url": "https://github.com/chickenzord/submail/releases",
               "bins": ["submail"],
               "label": "Download submail binary",
+            },
+            {
+              "id": "brew-jq",
+              "kind": "brew",
+              "formula": "jq",
+              "bins": ["jq"],
+              "label": "Install jq (brew)",
             },
           ],
       },
