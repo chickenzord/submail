@@ -20,7 +20,52 @@ submail server [--config ~/.config/submail/server.yaml]
 
 Config can also be set via `SUBMAIL_CONFIG` env var.
 
+#### Recommended setup with Docker Compose
+
+```yaml
+# docker-compose.yml
+services:
+  submail:
+    image: ghcr.io/chickenzord/submail:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./config.yaml:/etc/submail/config.yaml:ro
+      - submail-data:/data
+    environment:
+      SUBMAIL_CONFIG: /etc/submail/config.yaml
+      # Sensitive values can be injected as env vars instead of in config.yaml:
+      # SUBMAIL_IMAP_PASSWORD: ...
+      # SUBMAIL_AGENT_AGENT1_TOKEN: ...
+
+volumes:
+  submail-data:
+```
+
+```bash
+docker compose up -d
+```
+
+See [`config.example.yaml`](config.example.yaml) for the full config reference. The `storage.path` in `config.yaml` should point inside the mounted volume (e.g. `/data/submail.db`).
+
 ### Client
+
+#### Installation
+
+**Homebrew (macOS / Linux):**
+```bash
+brew install chickenzord/tap/submail
+```
+
+**Go install:**
+```bash
+go install github.com/chickenzord/submail/cmd/submail@latest
+```
+
+**Binary download:** grab the archive for your platform from the [releases page](https://github.com/chickenzord/submail/releases).
+
+#### Basic usage
 
 ```bash
 submail inbox list
@@ -33,6 +78,31 @@ Client flags (or env vars):
 |---|---|---|
 | `--url` | `SUBMAIL_URL` | Submail server URL |
 | `--token` | `SUBMAIL_TOKEN` | Bearer token |
+
+Use profiles to avoid repeating flags:
+
+```bash
+submail profile set myagent --url http://localhost:8080 --token <token>
+export SUBMAIL_PROFILE=myagent
+submail inbox list
+```
+
+#### Agent skill
+
+The repo ships a `submail-client` skill that teaches AI agents (pi, OpenClaw-compatible) how to use the CLI — listing messages, fetching full content, pagination, error handling, and more.
+
+Install it into your agent's skills directory:
+
+```bash
+# pi
+cp -r skills/submail-client ~/.pi/skills/
+
+# or clone directly
+git clone https://github.com/chickenzord/submail /tmp/submail
+cp -r /tmp/submail/skills/submail-client ~/.pi/skills/
+```
+
+Once installed, agents will automatically discover it and gain the ability to read from a Submail inbox.
 
 ## Configuration
 
