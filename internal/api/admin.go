@@ -5,8 +5,11 @@ import (
 	"crypto/sha256"
 	"embed"
 	"encoding/hex"
+	"fmt"
 	"html/template"
 	"net/http"
+	"net/mail"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -25,6 +28,17 @@ func init() {
 			Funcs(template.FuncMap{
 				"timeFormat": func(t time.Time) string {
 					return t.UTC().Format("2006-01-02 15:04:05 UTC")
+				},
+				"timeRFC3339": func(t time.Time) string {
+					return t.UTC().Format(time.RFC3339)
+				},
+				"gravatarURL": func(email string) string {
+					if addr, err := mail.ParseAddress(email); err == nil {
+						email = addr.Address
+					}
+					email = strings.ToLower(strings.TrimSpace(email))
+					h := sha256.Sum256([]byte(email))
+					return fmt.Sprintf("https://www.gravatar.com/avatar/%x?s=36&d=identicon", h)
 				},
 			}).
 			ParseFS(templateFS, "templates/*.html"),

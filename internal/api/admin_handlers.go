@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/chickenzord/submail/internal/storage"
 	"github.com/labstack/echo/v4"
 )
 
@@ -52,8 +53,16 @@ func (s *Server) adminLogout(c echo.Context) error {
 	return c.Redirect(http.StatusFound, "/admin/login")
 }
 
+type adminAgentInfo struct {
+	ID        string
+	Addresses []string
+	Active    bool
+}
+
 type adminListData struct {
 	Mails       []*Mail
+	Agents      []adminAgentInfo
+	AgentFilter string // selected agent ID; empty = all
 	Total       int
 	Limit       int
 	Offset      int
@@ -65,7 +74,8 @@ type adminListData struct {
 	NextOffset  int
 }
 
-// adminListMails handles GET /admin/ — lists all messages across all inboxes.
+// adminListMails handles GET /admin/ — lists all messages across all inboxes,
+// with optional per-agent filtering via ?agent=<id>.
 func (s *Server) adminListMails(c echo.Context) error {
 	limit := 50
 	offset := 0
@@ -81,22 +91,49 @@ func (s *Server) adminListMails(c echo.Context) error {
 		}
 	}
 
+	// Resolve agent filter: build agent list and find filter addresses if set.
+	agentFilter := c.QueryParam("agent")
+	agents := make([]adminAgentInfo, len(s.cfg.Agents))
+	var filterAddresses []string
+	for i, a := range s.cfg.Agents {
+		active := a.ID == agentFilter
+		agents[i] = adminAgentInfo{ID: a.ID, Addresses: a.Addresses, Active: active}
+		if active {
+			filterAddresses = a.Addresses
+		}
+	}
+	// Unknown agent ID → treat as "all"
+	if agentFilter != "" && filterAddresses == nil {
+		agentFilter = ""
+	}
+
 	ctx := c.Request().Context()
 
-	total, err := s.store.CountAllMessages(ctx)
+	var total int
+	var err error
+	if len(filterAddresses) > 0 {
+		total, err = s.store.CountMessages(ctx, filterAddresses)
+	} else {
+		total, err = s.store.CountAllMessages(ctx)
+	}
 	if err != nil {
-		c.Logger().Errorf("admin: count all messages: %v", err)
+		c.Logger().Errorf("admin: count messages: %v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to count messages")
 	}
 
-	messages, err := s.store.ListAllMessages(ctx, limit, offset)
+	var storeMsgs []*storage.Message
+	if len(filterAddresses) > 0 {
+		storeMsgs, err = s.store.ListMessages(ctx, filterAddresses, limit, offset)
+	} else {
+		storeMsgs, err = s.store.ListAllMessages(ctx, limit, offset)
+	}
 	if err != nil {
-		c.Logger().Errorf("admin: list all messages: %v", err)
+		c.Logger().Errorf("admin: list messages: %v", err)
 		return echo.NewHTTPError(http.StatusInternalServerError, "failed to list messages")
 	}
 
-	mails := make([]*Mail, len(messages))
-	for i, m := range messages {
+	mails := make([]*Mail, len(storeMsgs))
+	for i, m := range storeMsgs {
 		mails[i] = mailFromMessage(m)
 	}
 
@@ -109,6 +146,8 @@ func (s *Server) adminListMails(c echo.Context) error {
 
 	data := adminListData{
 		Mails:       mails,
+		Agents:      agents,
+		AgentFilter: agentFilter,
 		Total:       total,
 		Limit:       limit,
 		Offset:      offset,
@@ -128,7 +167,7 @@ type adminDetailData struct {
 	Subject    string
 	From       string
 	To         string
-	ReceivedAt interface{}
+	ReceivedAt time.Time
 	TextBody   string
 	HTMLBody   string
 }

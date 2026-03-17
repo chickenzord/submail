@@ -82,7 +82,9 @@
         <div class="fields">
           <span class="label">From</span><span class="value">{{.From}}</span>
           <span class="label">To</span><span class="value">{{.To}}</span>
-          <span class="label">Date</span><span class="value plain">{{timeFormat .ReceivedAt}}</span>
+          <span class="label">Date</span><span class="value plain">
+            <time class="local-time" datetime="{{timeRFC3339 .ReceivedAt}}" title="{{timeFormat .ReceivedAt}}">{{timeFormat .ReceivedAt}}</time>
+          </span>
           <span class="label id-row">ID</span><span class="value id-row">{{.ID}}</span>
         </div>
       </div>
@@ -117,6 +119,16 @@
       var defaultTab = hasHtml ? 'html' : 'text';
       showTab(defaultTab);
     })();
+    // Local-time rendering
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function fmtLocal(d) {
+      return d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+             ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    }
+    document.querySelectorAll('time.local-time').forEach(function(el) {
+      var d = new Date(el.getAttribute('datetime'));
+      if (!isNaN(d)) el.textContent = fmtLocal(d);
+    });
   </script>
 </body>
 </html>
