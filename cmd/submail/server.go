@@ -68,6 +68,10 @@ func runServer(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
+	if len(cfg.Agents) == 0 {
+		slog.Warn("no agents configured — the mail ingester will skip all incoming messages")
+	}
+
 	store, err := storage.NewSQLiteStore(cfg.Storage.Path)
 	if err != nil {
 		return err

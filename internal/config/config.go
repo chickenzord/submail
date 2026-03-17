@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -113,6 +114,45 @@ func (c *Config) validate() error {
 	return nil
 }
 
+// applyEnvOverrides replaces non-sensitive config fields with values from env
+// vars when present. This is called after setDefaults so env vars take
+// precedence over both YAML values and built-in defaults.
+func (c *Config) applyEnvOverrides() {
+	if v := os.Getenv("SUBMAIL_SERVER_ADDR"); v != "" {
+		c.Server.Addr = v
+	}
+	if v := os.Getenv("SUBMAIL_ADMIN_ENABLED"); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			c.Server.Admin.Enabled = b
+		}
+	}
+	if v := os.Getenv("SUBMAIL_STORAGE_PATH"); v != "" {
+		c.Storage.Path = v
+	}
+	if v := os.Getenv("SUBMAIL_IMAP_HOST"); v != "" {
+		c.IMAP.Host = v
+	}
+	if v := os.Getenv("SUBMAIL_IMAP_PORT"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			c.IMAP.Port = n
+		}
+	}
+	if v := os.Getenv("SUBMAIL_IMAP_USERNAME"); v != "" {
+		c.IMAP.Username = v
+	}
+	if v := os.Getenv("SUBMAIL_IMAP_MAILBOX"); v != "" {
+		c.IMAP.Mailbox = v
+	}
+	if v := os.Getenv("SUBMAIL_IMAP_TLS_MODE"); v != "" {
+		c.IMAP.TLSMode = TLSMode(v)
+	}
+	if v := os.Getenv("SUBMAIL_IMAP_POLL_INTERVAL"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil {
+			c.IMAP.PollInterval = d
+		}
+	}
+}
+
 // resolveSecrets replaces sensitive fields with values from env vars when present.
 // For each field the lookup order is:
 //  1. <envVar>__FILE — read secret from the file at that path
@@ -174,13 +214,14 @@ func Load(path string) (*Config, error) {
 	}
 
 	cfg.setDefaults()
-
-	if err := cfg.validate(); err != nil {
-		return nil, fmt.Errorf("invalid config: %w", err)
-	}
+	cfg.applyEnvOverrides()
 
 	if err := cfg.resolveSecrets(); err != nil {
 		return nil, fmt.Errorf("resolve secrets: %w", err)
+	}
+
+	if err := cfg.validate(); err != nil {
+		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
 	return &cfg, nil

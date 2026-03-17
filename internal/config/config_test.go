@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -226,6 +227,31 @@ func TestLoad_EnvOverridesSecret(t *testing.T) {
 	cfg, err := Load("testdata/valid.yaml")
 	require.NoError(t, err)
 	assert.Equal(t, "env-password", cfg.IMAP.Password)
+}
+
+func TestLoad_EnvOverrides(t *testing.T) {
+	t.Setenv("SUBMAIL_SERVER_ADDR", ":9999")
+	t.Setenv("SUBMAIL_STORAGE_PATH", "/data/submail.db")
+	t.Setenv("SUBMAIL_IMAP_HOST", "imap.override.example.com")
+	t.Setenv("SUBMAIL_IMAP_PORT", "143")
+	t.Setenv("SUBMAIL_IMAP_USERNAME", "override@example.com")
+	t.Setenv("SUBMAIL_IMAP_MAILBOX", "Archive")
+	t.Setenv("SUBMAIL_IMAP_TLS_MODE", "starttls")
+	t.Setenv("SUBMAIL_IMAP_POLL_INTERVAL", "2m")
+	t.Setenv("SUBMAIL_ADMIN_ENABLED", "true")
+	t.Setenv("SUBMAIL_ADMIN_PASSWORD", "adminpass")
+
+	cfg, err := Load("testdata/valid.yaml")
+	require.NoError(t, err)
+	assert.Equal(t, ":9999", cfg.Server.Addr)
+	assert.Equal(t, "/data/submail.db", cfg.Storage.Path)
+	assert.Equal(t, "imap.override.example.com", cfg.IMAP.Host)
+	assert.Equal(t, 143, cfg.IMAP.Port)
+	assert.Equal(t, "override@example.com", cfg.IMAP.Username)
+	assert.Equal(t, "Archive", cfg.IMAP.Mailbox)
+	assert.Equal(t, TLSModeSTARTTLS, cfg.IMAP.TLSMode)
+	assert.Equal(t, 2*time.Minute, cfg.IMAP.PollInterval)
+	assert.True(t, cfg.Server.Admin.Enabled)
 }
 
 func TestLoad_AgentTokenFromEnv(t *testing.T) {

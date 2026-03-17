@@ -22,8 +22,23 @@ Config can also be set via `SUBMAIL_CONFIG` env var.
 
 #### Recommended setup with Docker Compose
 
+Most settings can be supplied via environment variables. Only the `agents` list (structured data) must live in a config file.
+
+**`config.yaml`** — only what cannot be expressed as a flat env var:
+
 ```yaml
-# docker-compose.yml
+agents:
+  - id: agent1
+    addresses:
+      - "bot+agent1@example.com"
+  - id: agent2
+    addresses:
+      - "bot+agent2@example.com"
+```
+
+**`docker-compose.yml`:**
+
+```yaml
 services:
   submail:
     image: ghcr.io/chickenzord/submail:latest
@@ -35,9 +50,17 @@ services:
       - submail-data:/data
     environment:
       SUBMAIL_CONFIG: /etc/submail/config.yaml
-      # Sensitive values can be injected as env vars instead of in config.yaml:
-      # SUBMAIL_IMAP_PASSWORD: ...
-      # SUBMAIL_AGENT_AGENT1_TOKEN: ...
+      SUBMAIL_SERVER_ADDR: ":8080"
+      SUBMAIL_STORAGE_PATH: /data/submail.db
+      SUBMAIL_IMAP_HOST: imap.example.com
+      SUBMAIL_IMAP_PORT: "993"
+      SUBMAIL_IMAP_USERNAME: bot@example.com
+      SUBMAIL_IMAP_PASSWORD: secret
+      SUBMAIL_IMAP_TLS_MODE: tls
+      SUBMAIL_ADMIN_ENABLED: "true"
+      SUBMAIL_ADMIN_PASSWORD: changeme
+      SUBMAIL_AGENT_AGENT1_TOKEN: agent1-secret-token
+      SUBMAIL_AGENT_AGENT2_TOKEN: agent2-secret-token
 
 volumes:
   submail-data:
@@ -47,7 +70,7 @@ volumes:
 docker compose up -d
 ```
 
-See [`config.example.yaml`](config.example.yaml) for the full config reference. The `storage.path` in `config.yaml` should point inside the mounted volume (e.g. `/data/submail.db`).
+See [`config.example.yaml`](config.example.yaml) for the full config reference.
 
 ### Client
 
@@ -112,7 +135,17 @@ Sensitive values can be supplied via environment variable or a file:
 
 | Field | Env var | File variant |
 |---|---|---|
+| `server.addr` | `SUBMAIL_SERVER_ADDR` | — |
+| `server.admin.enabled` | `SUBMAIL_ADMIN_ENABLED` | — |
+| `server.admin.password` | `SUBMAIL_ADMIN_PASSWORD` | `SUBMAIL_ADMIN_PASSWORD__FILE` |
+| `storage.path` | `SUBMAIL_STORAGE_PATH` | — |
+| `imap.host` | `SUBMAIL_IMAP_HOST` | — |
+| `imap.port` | `SUBMAIL_IMAP_PORT` | — |
+| `imap.username` | `SUBMAIL_IMAP_USERNAME` | — |
 | `imap.password` | `SUBMAIL_IMAP_PASSWORD` | `SUBMAIL_IMAP_PASSWORD__FILE` |
+| `imap.mailbox` | `SUBMAIL_IMAP_MAILBOX` | — |
+| `imap.tls_mode` | `SUBMAIL_IMAP_TLS_MODE` | — |
+| `imap.poll_interval` | `SUBMAIL_IMAP_POLL_INTERVAL` | — |
 | `agents[*].token` | `SUBMAIL_AGENT_<ID>_TOKEN` | `SUBMAIL_AGENT_<ID>_TOKEN__FILE` |
 
 ## Mail Routing
