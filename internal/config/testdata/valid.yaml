@@ -6,6 +6,8 @@ imap:
   port: 993
   username: test@example.com
   password: testpassword
+  mailbox: INBOX
+  tls_mode: tls
 
 storage:
   path: /tmp/submail-test.db

@@ -67,6 +67,7 @@ func TestResolveSecret_FilePrecedenceOverEnv(t *testing.T) {
 
 func TestValidate_Valid(t *testing.T) {
 	cfg := &Config{
+		IMAP: IMAPConfig{Host: "imap.example.com", TLSMode: TLSModeImplicit},
 		Agents: []AgentConfig{
 			{ID: "agent1", Token: "tok1"},
 			{ID: "Agent2", Token: "tok2"},
@@ -76,21 +77,44 @@ func TestValidate_Valid(t *testing.T) {
 	assert.NoError(t, cfg.validate())
 }
 
+func TestValidate_IMAPHostRequired(t *testing.T) {
+	cfg := &Config{IMAP: IMAPConfig{TLSMode: TLSModeImplicit}}
+	assert.ErrorContains(t, cfg.validate(), "imap.host is required")
+}
+
+func TestValidate_TLSModeValid(t *testing.T) {
+	for _, mode := range []TLSMode{TLSModeImplicit, TLSModeSTARTTLS, TLSModeNone} {
+		cfg := &Config{IMAP: IMAPConfig{Host: "imap.example.com", TLSMode: mode}}
+		assert.NoError(t, cfg.validate(), "mode=%q", mode)
+	}
+}
+
+func TestValidate_TLSModeInvalid(t *testing.T) {
+	cfg := &Config{IMAP: IMAPConfig{Host: "imap.example.com", TLSMode: "ssl"}}
+	assert.ErrorContains(t, cfg.validate(), "imap.tls_mode")
+}
+
 func TestValidate_EmptyID(t *testing.T) {
-	cfg := &Config{Agents: []AgentConfig{{ID: "", Token: "tok"}}}
+	cfg := &Config{
+		IMAP:   IMAPConfig{Host: "imap.example.com", TLSMode: TLSModeImplicit},
+		Agents: []AgentConfig{{ID: "", Token: "tok"}},
+	}
 	assert.ErrorContains(t, cfg.validate(), "id is required")
 }
 
 func TestValidate_NonAlphanumericID(t *testing.T) {
-	tests := []string{"my-agent", "agent_1", "agent 1", "agent@1"}
-	for _, id := range tests {
-		cfg := &Config{Agents: []AgentConfig{{ID: id, Token: "tok"}}}
+	for _, id := range []string{"my-agent", "agent_1", "agent 1", "agent@1"} {
+		cfg := &Config{
+			IMAP:   IMAPConfig{Host: "imap.example.com", TLSMode: TLSModeImplicit},
+			Agents: []AgentConfig{{ID: id, Token: "tok"}},
+		}
 		assert.ErrorContains(t, cfg.validate(), "must be alphanumeric", "id=%q", id)
 	}
 }
 
 func TestValidate_DuplicateID(t *testing.T) {
 	cfg := &Config{
+		IMAP: IMAPConfig{Host: "imap.example.com", TLSMode: TLSModeImplicit},
 		Agents: []AgentConfig{
 			{ID: "agent1", Token: "tok1"},
 			{ID: "agent1", Token: "tok2"},
@@ -108,19 +132,23 @@ func TestSetDefaults_Applied(t *testing.T) {
 	assert.Equal(t, ":8080", cfg.Server.Addr)
 	assert.Equal(t, "submail.db", cfg.Storage.Path)
 	assert.Equal(t, 993, cfg.IMAP.Port)
+	assert.Equal(t, "INBOX", cfg.IMAP.Mailbox)
+	assert.Equal(t, TLSModeImplicit, cfg.IMAP.TLSMode)
 }
 
 func TestSetDefaults_DoesNotOverrideExisting(t *testing.T) {
 	cfg := &Config{
 		Server:  ServerConfig{Addr: ":9000"},
 		Storage: StorageConfig{Path: "/data/custom.db"},
-		IMAP:    IMAPConfig{Port: 143},
+		IMAP:    IMAPConfig{Port: 143, Mailbox: "Archive", TLSMode: TLSModeSTARTTLS},
 	}
 	cfg.setDefaults()
 
 	assert.Equal(t, ":9000", cfg.Server.Addr)
 	assert.Equal(t, "/data/custom.db", cfg.Storage.Path)
 	assert.Equal(t, 143, cfg.IMAP.Port)
+	assert.Equal(t, "Archive", cfg.IMAP.Mailbox)
+	assert.Equal(t, TLSModeSTARTTLS, cfg.IMAP.TLSMode)
 }
 
 // --- Load ---
@@ -134,6 +162,8 @@ func TestLoad_ValidFile(t *testing.T) {
 	assert.Equal(t, 993, cfg.IMAP.Port)
 	assert.Equal(t, "test@example.com", cfg.IMAP.Username)
 	assert.Equal(t, "testpassword", cfg.IMAP.Password)
+	assert.Equal(t, "INBOX", cfg.IMAP.Mailbox)
+	assert.Equal(t, TLSModeImplicit, cfg.IMAP.TLSMode)
 	assert.Equal(t, "/tmp/submail-test.db", cfg.Storage.Path)
 	require.Len(t, cfg.Agents, 1)
 	assert.Equal(t, "testagent", cfg.Agents[0].ID)
@@ -148,6 +178,8 @@ func TestLoad_AppliesDefaults(t *testing.T) {
 	assert.Equal(t, ":8080", cfg.Server.Addr)
 	assert.Equal(t, "submail.db", cfg.Storage.Path)
 	assert.Equal(t, 993, cfg.IMAP.Port)
+	assert.Equal(t, "INBOX", cfg.IMAP.Mailbox)
+	assert.Equal(t, TLSModeImplicit, cfg.IMAP.TLSMode)
 }
 
 func TestLoad_FileNotFound(t *testing.T) {

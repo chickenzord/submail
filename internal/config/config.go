@@ -22,11 +22,23 @@ type ServerConfig struct {
 	Addr string `yaml:"addr"`
 }
 
+// TLSMode controls how the IMAP connection is secured.
+// Valid values: "tls" (implicit TLS, default), "starttls", "none".
+type TLSMode string
+
+const (
+	TLSModeImplicit  TLSMode = "tls"
+	TLSModeSTARTTLS  TLSMode = "starttls"
+	TLSModeNone      TLSMode = "none"
+)
+
 type IMAPConfig struct {
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Username string `yaml:"username"`
-	Password string `yaml:"password"`
+	Host     string  `yaml:"host"`
+	Port     int     `yaml:"port"`
+	Username string  `yaml:"username"`
+	Password string  `yaml:"password"`
+	Mailbox  string  `yaml:"mailbox"`
+	TLSMode  TLSMode `yaml:"tls_mode"`
 }
 
 type StorageConfig struct {
@@ -49,9 +61,25 @@ func (c *Config) setDefaults() {
 	if c.IMAP.Port == 0 {
 		c.IMAP.Port = 993
 	}
+	if c.IMAP.Mailbox == "" {
+		c.IMAP.Mailbox = "INBOX"
+	}
+	if c.IMAP.TLSMode == "" {
+		c.IMAP.TLSMode = TLSModeImplicit
+	}
 }
 
 func (c *Config) validate() error {
+	if c.IMAP.Host == "" {
+		return fmt.Errorf("imap.host is required")
+	}
+	switch c.IMAP.TLSMode {
+	case TLSModeImplicit, TLSModeSTARTTLS, TLSModeNone:
+		// valid
+	default:
+		return fmt.Errorf("imap.tls_mode %q is invalid: must be one of tls, starttls, none", c.IMAP.TLSMode)
+	}
+
 	seen := make(map[string]bool)
 	for i, a := range c.Agents {
 		if a.ID == "" {

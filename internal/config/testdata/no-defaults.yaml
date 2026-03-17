@@ -2,6 +2,7 @@ imap:
   host: imap.test.example.com
   username: test@example.com
   password: testpassword
+  # port, mailbox, tls_mode omitted to exercise defaults
 
 agents:
   - id: testagent

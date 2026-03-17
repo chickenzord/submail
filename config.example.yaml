@@ -3,9 +3,11 @@ server:
 
 imap:
   host: imap.example.com
-  port: 993
+  port: 993                     # 993 for tls (default), 143 for starttls
   username: bot@example.com
   password: secret              # or use env: SUBMAIL_IMAP_PASSWORD[__FILE]
+  mailbox: INBOX                # mailbox to monitor (default: INBOX)
+  tls_mode: tls                 # tls (implicit, default) | starttls | none
 
 storage:
   path: ./submail.db
