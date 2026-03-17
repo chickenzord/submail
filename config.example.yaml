@@ -1,5 +1,8 @@
 server:
   addr: ":8080"
+  admin:
+    enabled: false          # set to true to enable the web-based admin viewer
+    password: "changeme"   # or use env: SUBMAIL_ADMIN_PASSWORD[__FILE]
 
 imap:
   host: imap.example.com

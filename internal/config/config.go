@@ -20,7 +20,14 @@ type Config struct {
 }
 
 type ServerConfig struct {
-	Addr string `yaml:"addr"`
+	Addr  string      `yaml:"addr"`
+	Admin AdminConfig `yaml:"admin"`
+}
+
+// AdminConfig controls the optional web-based admin viewer.
+type AdminConfig struct {
+	Enabled  bool   `yaml:"enabled"`
+	Password string `yaml:"password"` // or use env: SUBMAIL_ADMIN_PASSWORD[__FILE]
 }
 
 // TLSMode controls how the IMAP connection is secured.
@@ -86,6 +93,10 @@ func (c *Config) validate() error {
 		return fmt.Errorf("imap.tls_mode %q is invalid: must be one of tls, starttls, none", c.IMAP.TLSMode)
 	}
 
+	if c.Server.Admin.Enabled && c.Server.Admin.Password == "" {
+		return fmt.Errorf("server.admin.password is required when server.admin.enabled is true")
+	}
+
 	seen := make(map[string]bool)
 	for i, a := range c.Agents {
 		if a.ID == "" {
@@ -113,6 +124,11 @@ func (c *Config) resolveSecrets() error {
 	c.IMAP.Password, err = resolveSecret("SUBMAIL_IMAP_PASSWORD", c.IMAP.Password)
 	if err != nil {
 		return fmt.Errorf("imap.password: %w", err)
+	}
+
+	c.Server.Admin.Password, err = resolveSecret("SUBMAIL_ADMIN_PASSWORD", c.Server.Admin.Password)
+	if err != nil {
+		return fmt.Errorf("server.admin.password: %w", err)
 	}
 
 	for i := range c.Agents {

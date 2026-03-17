@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inbox — Submail Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #f9fafb; color: #111; }
+    nav {
+      background: #1e1b4b;
+      color: #fff;
+      padding: .75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    nav .brand { font-weight: 700; font-size: 1rem; letter-spacing: .02em; }
+    nav .brand span { color: #a5b4fc; font-weight: 400; }
+    nav a.logout {
+      margin-left: auto;
+      color: #c7d2fe;
+      font-size: .875rem;
+      text-decoration: none;
+    }
+    nav a.logout:hover { color: #fff; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 1.5rem; }
+    h2 { font-size: 1.125rem; margin-bottom: 1rem; color: #111; }
+    .meta { font-size: .875rem; color: #6b7280; margin-bottom: 1rem; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      overflow: hidden;
+      font-size: .875rem;
+    }
+    thead { background: #f3f4f6; }
+    th { padding: .625rem .875rem; text-align: left; font-weight: 600; color: #374151; border-bottom: 1px solid #e5e7eb; }
+    td { padding: .625rem .875rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f9fafb; }
+    td.subject a { color: #4f46e5; text-decoration: none; }
+    td.subject a:hover { text-decoration: underline; }
+    .addr { font-family: ui-monospace, monospace; font-size: .8rem; color: #374151; }
+    .time { color: #6b7280; white-space: nowrap; }
+    .empty { text-align: center; padding: 3rem; color: #9ca3af; }
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      margin-top: 1.25rem;
+      font-size: .875rem;
+    }
+    .pagination a, .pagination span {
+      padding: .375rem .75rem;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      color: #374151;
+      text-decoration: none;
+      background: #fff;
+    }
+    .pagination a:hover { background: #f3f4f6; }
+    .pagination .disabled { color: #d1d5db; pointer-events: none; }
+    .pagination .info { border: none; background: none; color: #6b7280; padding-left: 0; }
+  </style>
+</head>
+<body>
+  <nav>
+    <span class="brand">Submail <span>Admin</span></span>
+    <a class="logout" href="/admin/logout">Sign out</a>
+  </nav>
+  <div class="container">
+    <h2>All Messages</h2>
+    <p class="meta">{{.Total}} message{{if ne .Total 1}}s{{end}} total</p>
+    {{if .Mails}}
+    <table>
+      <thead>
+        <tr>
+          <th>From</th>
+          <th>To</th>
+          <th>Subject</th>
+          <th>Received</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Mails}}
+        <tr>
+          <td class="addr">{{.From}}</td>
+          <td class="addr">{{.To}}</td>
+          <td class="subject"><a href="/admin/mails/{{.ID}}">{{if .Subject}}{{.Subject}}{{else}}<em>(no subject)</em>{{end}}</a></td>
+          <td class="time">{{timeFormat .ReceivedAt}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    <div class="pagination">
+      {{if .HasPrev}}
+        <a href="/admin/?offset={{.PrevOffset}}&limit={{.Limit}}">&larr; Prev</a>
+      {{else}}
+        <span class="disabled">&larr; Prev</span>
+      {{end}}
+      <span class="info">{{.OffsetStart}}–{{.OffsetEnd}} of {{.Total}}</span>
+      {{if .HasNext}}
+        <a href="/admin/?offset={{.NextOffset}}&limit={{.Limit}}">Next &rarr;</a>
+      {{else}}
+        <span class="disabled">Next &rarr;</span>
+      {{end}}
+    </div>
+    {{else}}
+    <div class="empty">No messages yet.</div>
+    {{end}}
+  </div>
+</body>
+</html>

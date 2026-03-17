@@ -33,6 +33,14 @@ type Store interface {
 	// CountMessages returns the total number of messages delivered to any of the given addresses.
 	CountMessages(ctx context.Context, addresses []string) (int, error)
 
+	// ListAllMessages retrieves all messages regardless of recipient address,
+	// ordered by received_at descending. Intended for admin use only.
+	ListAllMessages(ctx context.Context, limit, offset int) ([]*Message, error)
+
+	// CountAllMessages returns the total number of stored messages.
+	// Intended for admin use only.
+	CountAllMessages(ctx context.Context) (int, error)
+
 	// MessageExists checks whether a message with the given email Message-ID exists.
 	MessageExists(ctx context.Context, messageID string) (bool, error)
 

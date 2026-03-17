@@ -34,6 +34,23 @@ func (s *Server) registerRoutes() {
 	inbox := v1.Group("/inbox", s.authMiddleware())
 	inbox.GET("/mails", s.listMails)
 	inbox.GET("/mails/:id", s.getMail)
+
+	if s.cfg.Server.Admin.Enabled {
+		s.echo.GET("/", func(c echo.Context) error {
+			return c.Redirect(http.StatusFound, "/admin/")
+		})
+
+		admin := s.echo.Group("/admin")
+		// Public: login / logout (no session required)
+		admin.GET("/login", s.adminLoginForm)
+		admin.POST("/login", s.adminLoginSubmit)
+		admin.GET("/logout", s.adminLogout)
+		// Protected: everything else requires a valid session cookie
+		secured := admin.Group("", s.adminSessionMiddleware())
+		secured.GET("", s.adminListMails)
+		secured.GET("/", s.adminListMails)
+		secured.GET("/mails/:id", s.adminGetMail)
+	}
 }
 
 // Handler returns the underlying http.Handler, useful for testing.

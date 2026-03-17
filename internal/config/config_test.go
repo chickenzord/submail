@@ -77,6 +77,30 @@ func TestValidate_Valid(t *testing.T) {
 	assert.NoError(t, cfg.validate())
 }
 
+func TestValidate_AdminEnabledWithPassword(t *testing.T) {
+	cfg := &Config{
+		IMAP:   IMAPConfig{Host: "imap.example.com", TLSMode: TLSModeImplicit},
+		Server: ServerConfig{Admin: AdminConfig{Enabled: true, Password: "secret"}},
+	}
+	assert.NoError(t, cfg.validate())
+}
+
+func TestValidate_AdminEnabledWithoutPassword(t *testing.T) {
+	cfg := &Config{
+		IMAP:   IMAPConfig{Host: "imap.example.com", TLSMode: TLSModeImplicit},
+		Server: ServerConfig{Admin: AdminConfig{Enabled: true, Password: ""}},
+	}
+	assert.ErrorContains(t, cfg.validate(), "server.admin.password is required")
+}
+
+func TestValidate_AdminDisabledWithoutPassword(t *testing.T) {
+	cfg := &Config{
+		IMAP:   IMAPConfig{Host: "imap.example.com", TLSMode: TLSModeImplicit},
+		Server: ServerConfig{Admin: AdminConfig{Enabled: false, Password: ""}},
+	}
+	assert.NoError(t, cfg.validate())
+}
+
 func TestValidate_IMAPHostRequired(t *testing.T) {
 	cfg := &Config{IMAP: IMAPConfig{TLSMode: TLSModeImplicit}}
 	assert.ErrorContains(t, cfg.validate(), "imap.host is required")

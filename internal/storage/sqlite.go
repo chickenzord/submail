@@ -162,6 +162,38 @@ func (s *SQLiteStore) CountMessages(ctx context.Context, addresses []string) (in
 	return count, err
 }
 
+func (s *SQLiteStore) ListAllMessages(ctx context.Context, limit, offset int) ([]*Message, error) {
+	rows, err := s.db.QueryContext(ctx, `
+		SELECT id, message_id, subject, from_addr, to_addr, received_at, text_body, html_body
+		FROM messages
+		ORDER BY received_at DESC
+		LIMIT ? OFFSET ?
+	`, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var messages []*Message
+	for rows.Next() {
+		msg, err := scanMessage(rows)
+		if err != nil {
+			return nil, err
+		}
+		messages = append(messages, msg)
+	}
+	if messages == nil {
+		messages = []*Message{}
+	}
+	return messages, rows.Err()
+}
+
+func (s *SQLiteStore) CountAllMessages(ctx context.Context) (int, error) {
+	var count int
+	err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM messages`).Scan(&count)
+	return count, err
+}
+
 func (s *SQLiteStore) MessageExists(ctx context.Context, messageID string) (bool, error) {
 	var count int
 	err := s.db.QueryRowContext(ctx,
