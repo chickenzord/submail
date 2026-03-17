@@ -25,7 +25,7 @@ func profileDir() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("resolve home directory: %w", err)
 	}
-	return filepath.Join(home, ".config", "submail"), nil
+	return filepath.Join(home, ".config", "submail", "profiles"), nil
 }
 
 // profileFilePath returns the full path to a named profile file.
@@ -103,8 +103,7 @@ func listProfiles() ([]string, error) {
 			continue
 		}
 		n := e.Name()
-		// Skip the server config and any non-yaml files.
-		if n == "server.yaml" || !strings.HasSuffix(n, ".yaml") {
+		if !strings.HasSuffix(n, ".yaml") {
 			continue
 		}
 		names = append(names, strings.TrimSuffix(n, ".yaml"))
