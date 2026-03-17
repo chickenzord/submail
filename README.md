@@ -4,6 +4,15 @@
 
 Virtual inbox router for AI agents.
 
+## Features
+
+- **JSON REST API** — per-agent authenticated endpoints to list and fetch emails; never marks messages as read on the IMAP server
+- **Client CLI** — `submail` binary with profile management, structured JSON output, and predictable exit codes designed for scripting and automation
+- **Agent skill** — ships a ready-to-install `submail-client` skill (OpenClaw-compatible) so AI agents can read inboxes with zero boilerplate
+- **Admin web UI** — browser-based viewer to inspect all agent inboxes, filter by agent, and browse messages
+
+![Submail Admin UI](.github/assets/admin_screen.png)
+
 ## Overview
 
 Submail connects to one or more real email inboxes via IMAP and re-exposes them as a REST API with per-agent access control. Each agent gets their own API token scoped to one or more configured addresses that all deliver into the same monitored inbox.
