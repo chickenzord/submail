@@ -21,7 +21,6 @@ type Server struct {
 func NewServer(cfg *config.Config, store storage.Store) *Server {
 	e := echo.New()
 	e.HideBanner = true
-	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
 	s := &Server{echo: e, cfg: cfg, store: store}
@@ -30,7 +29,7 @@ func NewServer(cfg *config.Config, store storage.Store) *Server {
 }
 
 func (s *Server) registerRoutes() {
-	v1 := s.echo.Group("/api/v1")
+	v1 := s.echo.Group("/api/v1", middleware.Logger())
 	inbox := v1.Group("/inbox", s.authMiddleware())
 	inbox.GET("/mails", s.listMails)
 	inbox.GET("/mails/:id", s.getMail)
