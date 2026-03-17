@@ -117,12 +117,20 @@ The repo ships a `submail-client` skill that teaches AI agents (pi, OpenClaw-com
 Install it into your agent's skills directory:
 
 ```bash
-# pi
-cp -r skills/submail-client ~/.pi/skills/
+npx skills add chickenzord/submail
+```
 
-# or clone directly
+Or manually copy from this repo:
+
+```bash
+cp -r skills/submail-client <your-agent-skills-dir>/
+```
+
+Or clone the repo and copy from there:
+
+```bash
 git clone https://github.com/chickenzord/submail /tmp/submail
-cp -r /tmp/submail/skills/submail-client ~/.pi/skills/
+cp -r /tmp/submail/skills/submail-client <your-agent-skills-dir>/
 ```
 
 Once installed, agents will automatically discover it and gain the ability to read from a Submail inbox.

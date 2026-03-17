@@ -11,7 +11,23 @@ metadata:
         "homepage": "https://github.com/chickenzord/submail",
         "keywords": ["email", "inbox", "imap", "submail", "cli", "agent", "mail"],
         "requires": { "bins": ["submail"] },
-        "install": [],
+        "install":
+          [
+            {
+              "id": "brew-submail",
+              "kind": "brew",
+              "formula": "chickenzord/tap/submail",
+              "bins": ["submail"],
+              "label": "Install submail (brew)",
+            },
+            {
+              "id": "download-submail",
+              "kind": "download",
+              "url": "https://github.com/chickenzord/submail/releases",
+              "bins": ["submail"],
+              "label": "Download submail binary",
+            },
+          ],
       },
   }
 ---
