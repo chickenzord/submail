@@ -115,10 +115,11 @@ var uuidRE = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4
 // ── Flags ─────────────────────────────────────────────────────────────────────
 
 var (
-	clientURL   string
-	clientToken string
-	jsonFlag    bool
-	quietFlag   bool
+	clientURL     string
+	clientToken   string
+	clientProfile string
+	jsonFlag      bool
+	quietFlag     bool
 )
 
 // ── inbox ─────────────────────────────────────────────────────────────────────
@@ -133,9 +134,11 @@ var inboxCmd = &cobra.Command{
 
 func init() {
 	inboxCmd.PersistentFlags().StringVarP(&clientURL, "url", "u", "",
-		"Submail server URL (env: SUBMAIL_URL, e.g. http://localhost:8080)")
+		"Submail server URL (overrides profile, env: SUBMAIL_URL)")
 	inboxCmd.PersistentFlags().StringVarP(&clientToken, "token", "t", "",
-		"Bearer token for the agent (env: SUBMAIL_TOKEN)")
+		"Bearer token for the agent (overrides profile, env: SUBMAIL_TOKEN)")
+	inboxCmd.PersistentFlags().StringVarP(&clientProfile, "profile", "p", "",
+		"Connection profile to use (env: SUBMAIL_PROFILE, default: \"default\")")
 	inboxCmd.PersistentFlags().BoolVar(&jsonFlag, "json", false,
 		"Output JSON to stdout (auto-enabled when stdout is not a TTY)")
 	inboxCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false,
@@ -146,20 +149,50 @@ func init() {
 	rootCmd.AddCommand(inboxCmd)
 }
 
-// resolveClientFlags fills flags from env vars when not set explicitly.
+// resolveClientFlags fills clientURL and clientToken using the precedence:
+//  1. Explicit flags (--url / --token)
+//  2. Environment variables (SUBMAIL_URL / SUBMAIL_TOKEN)
+//  3. Named profile (--profile / SUBMAIL_PROFILE, falls back to "default")
 func resolveClientFlags() error {
+	// 1 & 2 — flags then env vars
 	if clientURL == "" {
 		clientURL = os.Getenv("SUBMAIL_URL")
 	}
 	if clientToken == "" {
 		clientToken = os.Getenv("SUBMAIL_TOKEN")
 	}
+
+	// 3 — profile (only consulted for values still missing)
+	if clientURL == "" || clientToken == "" {
+		name := clientProfile
+		if name == "" {
+			name = os.Getenv("SUBMAIL_PROFILE")
+		}
+		if name == "" {
+			name = "default"
+		}
+
+		prof, err := loadProfile(name)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "Error:", err)
+			return &cliErr{exitFailure}
+		}
+		if prof != nil {
+			if clientURL == "" {
+				clientURL = prof.URL
+			}
+			if clientToken == "" {
+				clientToken = prof.Token
+			}
+		}
+	}
+
 	if clientURL == "" {
-		fmt.Fprintln(os.Stderr, "Error: server URL is required (--url / SUBMAIL_URL)")
+		fmt.Fprintln(os.Stderr, "Error: server URL is required (--url, SUBMAIL_URL, or a profile)")
 		return &cliErr{exitUsage}
 	}
 	if clientToken == "" {
-		fmt.Fprintln(os.Stderr, "Error: agent token is required (--token / SUBMAIL_TOKEN)")
+		fmt.Fprintln(os.Stderr, "Error: agent token is required (--token, SUBMAIL_TOKEN, or a profile)")
 		return &cliErr{exitUsage}
 	}
 	return nil
