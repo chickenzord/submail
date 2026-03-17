@@ -43,6 +43,13 @@ Sensitive values can be supplied via environment variable or a file:
 | `imap.password` | `SUBMAIL_IMAP_PASSWORD` | `SUBMAIL_IMAP_PASSWORD__FILE` |
 | `agents[*].token` | `SUBMAIL_AGENT_<ID>_TOKEN` | `SUBMAIL_AGENT_<ID>_TOKEN__FILE` |
 
+## Mail Routing
+
+Each mail is routed based on a single recipient address — the plus-alias it was delivered to (e.g. `bot+agent1@example.com`). This means:
+
+- Only the `To:` delivery address is used for routing; `Cc:` and `Bcc:` recipients are not considered.
+- If a mail is addressed to multiple aliases belonging to the same agent, it will only appear once in their inbox (under whichever alias was recorded at ingest time).
+
 ## API
 
 All endpoints require `Authorization: Bearer <token>`.
