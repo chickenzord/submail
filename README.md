@@ -1,7 +1,11 @@
 # submail
 
-[![Tests](https://github.com/chickenzord/submail/actions/workflows/go.yml/badge.svg)](https://github.com/chickenzord/submail/actions/workflows/go.yml)
-[![codecov](https://codecov.io/gh/chickenzord/submail/branch/main/graph/badge.svg)](https://codecov.io/gh/chickenzord/submail)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/chickenzord/submail)
+[![Go Report Card](https://goreportcard.com/badge/github.com/chickenzord/submail)](https://goreportcard.com/report/github.com/chickenzord/submail)
+[![codecov](https://codecov.io/github/chickenzord/submail/graph/badge.svg)](https://codecov.io/github/chickenzord/submail)
+![test](https://github.com/chickenzord/submail/actions/workflows/go.yml/badge.svg?branch=main)
+![docker](https://github.com/chickenzord/submail/actions/workflows/docker.yml/badge.svg?branch=main)
+![Code License](https://img.shields.io/github/license/chickenzord/submail)
 
 Virtual inbox router for AI agents.
 
