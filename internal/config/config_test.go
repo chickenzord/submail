@@ -261,3 +261,33 @@ func TestLoad_AgentTokenFromEnv(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "env-agent-token", cfg.Agents[0].Token)
 }
+
+func TestResolveSecrets_AgentTokenFileError(t *testing.T) {
+	t.Setenv("SUBMAIL_AGENT_TESTAGENT_TOKEN__FILE", "/nonexistent/path/token")
+
+	cfg := &Config{
+		IMAP:   IMAPConfig{Host: "imap.example.com"},
+		Agents: []AgentConfig{{ID: "testagent", Token: "fallback"}},
+	}
+	err := cfg.resolveSecrets()
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "agents[0].token")
+}
+
+func TestLoad_ResolveSecretsError(t *testing.T) {
+	dir := t.TempDir()
+	f := filepath.Join(dir, "config.yaml")
+	require.NoError(t, os.WriteFile(f, []byte(`
+imap:
+  host: imap.example.com
+agents:
+  - id: testagent
+    token: fallback
+`), 0644))
+
+	t.Setenv("SUBMAIL_AGENT_TESTAGENT_TOKEN__FILE", "/nonexistent/path/token")
+
+	_, err := Load(f)
+	assert.Error(t, err)
+	assert.ErrorContains(t, err, "resolve secrets")
+}

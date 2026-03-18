@@ -189,3 +189,28 @@ func TestMessageExists(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, exists)
 }
+
+func TestCountMessages_EmptyAddresses(t *testing.T) {
+	store := newTestStore(t)
+	n, err := store.CountMessages(context.Background(), []string{})
+	require.NoError(t, err)
+	assert.Equal(t, 0, n)
+}
+
+func TestListMessages_NoMatchingRecords(t *testing.T) {
+	store := newTestStore(t)
+	// Non-empty address slice but nothing stored for it — exercises the
+	// "messages == nil → return empty slice" branch.
+	msgs, err := store.ListMessages(context.Background(), []string{"nobody@example.com"}, 50, 0)
+	require.NoError(t, err)
+	assert.NotNil(t, msgs)
+	assert.Empty(t, msgs)
+}
+
+func TestListAllMessages_EmptyStore(t *testing.T) {
+	store := newTestStore(t)
+	msgs, err := store.ListAllMessages(context.Background(), 50, 0)
+	require.NoError(t, err)
+	assert.NotNil(t, msgs)
+	assert.Empty(t, msgs)
+}
